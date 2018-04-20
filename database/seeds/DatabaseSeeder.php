@@ -22,10 +22,21 @@ class DatabaseSeeder extends Seeder
 		DB::table('users')->where('mb_level','Shipping')->update(['mb_level' => 'export']);
 		DB::table('users')->where('mb_level','Production')->update(['mb_level' => 'spec-model']);
 		DB::table('users')->where('mb_level','Read_only')->update(['mb_level' => 'readonly']);
-		$specs = DB::table('model_spec')->groupBy('spec_no')->orderBy('id','desc')->get();
+		$specs = DB::table('model_spec')->orderBy('id','desc')->get();
 		if( $specs ){
 			foreach( $specs as $spec){
-				DB::table('model_spec')->where('id',$spec->id)->update(['model_daft' => 'Y']);
+				$spNO = @json_decode( $spec->spec_no );
+				$spRows = DB::table('model_spec')->where('spec_no','like','%'. $spNO->name .'%')
+									->where('spec_no','like','%'. $spNO->descript .'%')
+									->get();
+				if($spRows ){
+					$x=0;
+					foreach( $spRows as $spRow){
+						if( $x > 0 )
+							DB::table('model_spec')->where('id',$spRow->id)->delete();
+						$x++;
+					}
+				}
 			}
 		}
  	}

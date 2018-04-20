@@ -1,0 +1,157 @@
+body,table,div{
+    font-family:'cs_chatthairegular';    
+}
+table{
+    border-collapse: collapse;
+    width:100%;
+    color:#000;
+}
+
+.inv-header td h4{
+    padding:0;
+    margin:0;
+}
+.inv-header td{
+    font-family:'cs_chatthairegular';
+    font-size: 20px;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.inv-header td.th-font{
+    line-height: 1;
+}
+
+.inv-header td.en-font{
+    line-height: 1;
+    padding:0;
+}
+
+.inv-customer{
+    margin-bottom: 20px;
+}
+
+.inv-customer td{
+    font-family:'cs_chatthairegular';
+    font-size: 16px;
+    line-height: 1;
+    border:0px solid #000;
+    white-space: nowrap;
+}
+
+.head-lg{
+    width:80%;
+}
+
+hr.lg{
+    border:2px #000000 solid;
+}
+.inv-detail{
+        border:.5px solid #000000;
+        margin-bottom:30px;
+}
+
+.inv-detail > thead > tr > td:first-child {
+    border-left:.5px solid #fff;
+}
+.inv-detail > thead > tr > td {
+    font-family: 'cs_chatthairegular';
+    line-height: .9;
+    background: #000000;
+    border-right:.5px solid #fff;
+    border-top:.5px solid #fff;
+    border-bottom: 1px solid #000000;
+    text-align: center;
+    color:#fff;
+    font-size: 16px;
+}
+
+
+.inv-detail > tbody > tr > td {
+    font-family: 'cs_chatthairegular';
+    font-size: 14px;
+    padding:4px;
+    line-height: .8;
+    min-height: 24px;
+    border:.5px solid #d7d0c8;
+    width: auto;
+}
+
+span,.bold{
+    font-family: 'cs_chatthaiuiregular';
+    font-size:16px;
+}
+.bath-text{
+    font-family: 'cs_chatthaiuiregular';
+    font-size:16px;
+    background:#ccc;
+    padding:6px;
+}
+
+.text-right{
+    text-align: right;
+}
+.text-center{
+    text-align: center;
+}
+
+.inv-signature{
+    margin-top:20px;
+}
+.inv-signature td{
+    width:20%;
+    font-size: 12px;
+}
+
+.inv-signature .signature-row{
+    height: 60px;
+}
+
+.top-border{
+    border-top: .5px solid #000000;
+    font-family: 'cs_chatthairegular';
+    padding:4px;
+    font-size: 12px;
+}
+
+.remark{
+    vertical-align: top;
+    border-right: .5px solid #000000;
+
+}
+.text-bath,
+.border-right{
+     border-right: .5px solid #000000;
+}
+.w80{
+    width:80px;
+}
+.w40{ width:40px; }
+.w30{ width:5%;}
+.w120{ width:15%;}
+.noborder > td{
+    border:0;
+}
+.line-top > td{
+    border-top:.5px solid #000000;
+}
+.bg2 > td{
+    background:#f2efec;
+}
+.bg3 > td{
+    background:#f2efec;
+
+}
+.text-thank{
+    text-align: center;
+    font-family: 'cs_chatthairegular';
+    font-size:14px;
+    line-height: 1.2;
+}
+img{
+    height: 40px;
+}
+.panel-pdf{
+    page-break-inside: avoid;
+}
+div.breakNow { page-break-inside:avoid; page-break-after:always; }

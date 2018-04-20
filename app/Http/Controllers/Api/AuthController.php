@@ -13,7 +13,9 @@ use Request as Req;
 class AuthController extends Controller
 {
     //
-		public function login(Request $request){				$user = $request->input('username');
+		public function login(Request $request){
+			//echo '<pre>',print_r( $request->all() ),'</pre>';	
+				$user = $request->input('username');
 				$password = $request->input('password');
 				$email 	= ['email' => $user, 'password' => $password];
 				$username 	= ['username' => $user, 'password' => $password];

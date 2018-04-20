@@ -29,6 +29,11 @@ Route::group(['middleware'=>'cors'],function(){
         Route::resource('admin','Api\AdminController');
         Route::resource('category','Api\CategoryController');
         Route::resource('restourant','Api\RestourantController');
+        Route::get('spec-model/export-pdf/{id?}','Api\SpecController@exportPdf');
+        Route::get('spec-model/export-xls/{id?}','Api\SpecController@exportXls');
         Route::resource('spec-model','Api\SpecController');
+
+        //:: Search auto complete :://
+        Route::get('search/model','Api\SpecController@search');
     });
 });
