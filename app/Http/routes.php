@@ -27,12 +27,21 @@ Route::group(['middleware'=>'cors'],function(){
         Route::get('auth/check','Api\AuthController@check');
         Route::resource('auth0','Api\Auth0Controller');
         Route::resource('admin','Api\AdminController');
-        Route::resource('category','Api\CategoryController');
-        Route::resource('restourant','Api\RestourantController');
+
+        //:: SPEC MODEL :://
         Route::get('spec-model/export-pdf/{id?}','Api\SpecController@exportPdf');
         Route::get('spec-model/export-xls/{id?}','Api\SpecController@exportXls');
+        Route::post('spec-model/search','Api\SpecController@onSearch');
         Route::resource('spec-model','Api\SpecController');
 
+        //:: ORDER SHEET :://
+        Route::get('order-sheet/export/{form?}/{id?}','Api\OrderController@export');
+        Route::resource('order-sheet','Api\OrderController');
+
+        //:: MATERIALS ORDER AND MATERIALS OP :://
+        Route::get('materials-search/{type?}','Api\MaterialsController@searchSpec');
+        //Route::get('materials-search/po','Api\MaterialsController@searchPo');
+        Route::resource('materials','Api\MaterialsController');
         //:: Search auto complete :://
         Route::get('search/model','Api\SpecController@search');
     });

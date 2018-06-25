@@ -7,6 +7,7 @@ use Request as Req;
 use App\Http\Requests;
 use JWTAuth;
 use Excel;
+use PHPExcel;
 use File;
 use PDF;
 use App\Http\Controllers\Controller;
@@ -18,9 +19,9 @@ class SpecController extends Controller
     {
         if((Req::exists('field') || Req::exists('keywords')) && Req::input('keywords') != ''){
             $rows = Spec::where(Req::input('field'),'like','%'. Req::input('keywords') .'%')
-            ->orderBy('create_date','desc')->paginate(50);
+            ->orderBy('create_date','desc')->paginate(100);
         }else {
-            $rows = Spec::orderBy('create_date','desc')->paginate(50);
+            $rows = Spec::orderBy('create_date','desc')->paginate(100);
         }
         
         $json = [];
@@ -31,7 +32,9 @@ class SpecController extends Controller
         }
         $data = [
             'code' => 200,
-            'data' => $json
+            'data' => $json,
+            'cpage' => $rows->currentPage(),
+            'lpage' => $rows->lastPage()
         ];
         return response()->json($data);
     }
@@ -43,7 +46,7 @@ class SpecController extends Controller
     public function store(Request $request)
     {
         $chk = Spec::where('spec_no','like','%"name":"'. $request->input('spec.name') .'"%')
-                    ->where('spec_no','like','%"descript":"'. $request->input('spec.descript') .'"%')
+        //            ->where('spec_no','like','%"descript":"'. $request->input('spec.descript') .'"%')
                     ->orderBy('id','desc')
                     ->first();
         $row = $chk ? $chk : new Spec;
@@ -66,7 +69,14 @@ class SpecController extends Controller
 
     public function fieldPost($row, $request){
         $user = JWTAuth::toUser( $request->input('token') );
-        //echo '<pre>',print_r( $user ) ,'</pre>';
+        //echo '<pre>',print_r( $request->all() ) ,'</pre>';
+        $eyelet = [
+            'id'        => $request->input('eyelet.id'),
+            'name'      => $request->input('eyelet.name'),
+            'descript'  => $request->input('eyelet.descript'),
+            'rate'      => $request->input('eyelet.rate')
+        ];
+
         $row->buckle            = json_encode( $request->input('buckle') );
         $row->color             = json_encode( $request->input('color')  );
         $row->cylinder          = json_encode( $request->input('cylinder') );
@@ -74,7 +84,7 @@ class SpecController extends Controller
         $row->edge_thickness    = $request->input('edge_thickness');
         $row->end_piece_inside  = json_encode( $request->input('end_piece_inside') );
         $row->end_piece_outside = json_encode( $request->input('end_piece_outside') );
-        $row->eyelet            = json_encode( $request->input('eyelet') );
+        $row->eyelet            = json_encode( $eyelet );
         $row->filler            = json_encode( $request->input('filler') );
         $row->kanmoto_thickness = $request->input('kanmoto_thickness');
         $row->keeper            = $request->input('keeper');
@@ -96,6 +106,8 @@ class SpecController extends Controller
         $row->punch_hole_length = $request->input('punch_hole_length');
         $row->bijow_width       = $request->input('punch_hole_width');
         $row->remarks           = $request->input('remarks');
+        $row->magic_qm          = $request->input('eyelet.magic_qm');
+        $row->magic_qn          = $request->input('eyelet.magic_qn');
         $row->size_tip          = json_encode( $request->input('size_tip') );
         $row->spec_no           = json_encode( $request->input('spec') );
         $row->spring_bar        = json_encode( $request->input('spring_bar') );
@@ -104,6 +116,8 @@ class SpecController extends Controller
         $row->total_thickness   = json_encode( $request->input('total_thickness') );
         $row->type              = json_encode( $request->input('type') );
         $row->staff             = $user->username;
+
+        //echo '<pre>Row => ', print_r( $row ) ,'</pre>';
         /*
         $arr = json_encode([
             'id'        => '',
@@ -252,7 +266,34 @@ class SpecController extends Controller
     }
 
     public function onSearch(Request $request){
-        
+        //echo '<pre>',print_r($request->all() ),'</pre>';
+        $term = strtoupper( Req::input('term') );
+        $field = $request->input('fields');
+        $rows = Spec::where( $field ,'like','%'. $term .'%')
+                        ->skip(0)->take(10)
+                        ->orderBy('spec_no')->get();
+        $sdata = [];
+        $fdata = [];
+        if( $rows ){
+            foreach( $rows as $row){
+                $rowData = $this->json( $row );
+                //echo '<pre>',print_r( $rowData['spec_no'] ),'</pre>';
+                //echo 'spec_no = '. $rowData['spec_no']->name .'<br>';
+                $fieldVal = @$rowData[$field]->name;
+                if( strpos(strtoupper( $fieldVal ),$term) !== false ){
+                    if( !in_array($fieldVal,$fdata)){
+                        $sdata[] = $rowData;
+                        $fdata[] = $fieldVal;
+                    }
+                }
+                
+            }
+        }
+        $data = [
+            'data' => $sdata,
+            'code' => 200,
+        ];
+        return response()->json($data);    
     }
 
     public function search(){
@@ -281,12 +322,30 @@ class SpecController extends Controller
         //echo 'export pdf';
         
         // $data = [];
-        $pdf = PDF::loadView('spec.export-pdf', [])
-                    ->save( public_path() .'/documents/export-'. time() .'.pdf');
+         $pdf = PDF::loadView('spec.export-pdf', [])
+                     ->save( public_path() .'/documents/export-'. time() .'.pdf');
         return view('spec.export-pdf');   
     }
 
     public function exportXls($id = 0){
-
+        $query = Spec::where('id',$id)->first();
+        if( $query ){
+            $row = @json_decode( json_encode( Spec::fieldRows( $query ) ) );
+            $xls 	= new PHPExcel();
+            $excel 	= 'public/documents/spec-model-no-'. $row->spec_no->name .'.xlsx';
+            include storage_path() . '/export-class/xls-header.php';
+			$subject 	= 	'New Spec Modification';
+            include storage_path() . '/export-class/xls-spec-model.php';
+            $data = [
+                'code' => 200,
+                'file' => asset( $excel )
+            ];
+        }else{ 
+            $data = [
+                'code' => 202,
+                'file' => ''
+            ];
+        }
+        return response()->json( $data );
     }
 }

@@ -12,13 +12,19 @@ class CustomerPo extends Migration
      */
     public function up()
     {
-        Schema::table('customer_po', function (Blueprint $table) {
-            if(!Schema::hasColumn('customer_po','id')){
-                $table->renameColumn('cp_no','id');
-            }
-            $table->timestamps();
-        });
-        DB::statement('ALTER TABLE customer_po ENGINE = InnoDB');
+        if(!Schema::hasTable('order_headers')){
+            Schema::rename('customer_po','order_headers');
+            Schema::table('order_headers', function (Blueprint $table) {
+                if(!Schema::hasColumn('order_headers','id')){
+                    $table->renameColumn('cp_no','id');
+                }
+                if(!Schema::hasColumn('order_headers','form_type')){
+                    $table->renameColumn('form_id','form_type');
+                }
+                $table->timestamps();
+            });
+        }
+        DB::statement('ALTER TABLE order_headers ENGINE = InnoDB');
     }
 
     /**
@@ -28,7 +34,7 @@ class CustomerPo extends Migration
      */
     public function down()
     {
-        Schema::table('customer_po', function (Blueprint $table) {
+        Schema::table('order_headers', function (Blueprint $table) {
             //
         });
     }
