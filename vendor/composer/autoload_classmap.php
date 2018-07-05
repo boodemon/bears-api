@@ -11,6 +11,8 @@ return array(
     'Cpdf' => $vendorDir . '/dompdf/dompdf/lib/Cpdf.php',
     'CreateMaterialsDetailsTable' => $baseDir . '/database/migrations/2018_06_01_095831_create_materials_details_table.php',
     'CreateMaterialsHeadsTable' => $baseDir . '/database/migrations/2018_06_01_095804_create_materials_heads_table.php',
+    'CreatePoDetailsTable' => $baseDir . '/database/migrations/2018_07_02_181000_create_po_details_table.php',
+    'CreatePoHeadersTable' => $baseDir . '/database/migrations/2018_07_02_180937_create_po_headers_table.php',
     'CustomerPo' => $baseDir . '/database/migrations/2018_01_19_033829_customer_po.php',
     'DatabaseSeeder' => $baseDir . '/database/seeds/DatabaseSeeder.php',
     'Dealer' => $baseDir . '/database/migrations/2018_01_19_033900_dealer.php',

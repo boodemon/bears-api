@@ -37,8 +37,8 @@ class MaterialsController extends Controller
         if( $rows ){
             foreach( $rows as $row ){
                 $jdata[] = [
-                    'created_at' => date('d M Y', strtotime( $row->created_at )),
-                    'updated_at' => date('d M Y', strtotime( $row->updated_at )),
+                    'created_at' => date('Y-m-d', strtotime( $row->created_at )),
+                    'updated_at' => date('Y-m-d', strtotime( $row->updated_at )),
                     'id'         => $row->id,
                     'status'     => $row->status,
                     'user'       => $user[$row->user_id],
@@ -79,6 +79,9 @@ class MaterialsController extends Controller
         $head->user_id = $user->id;
         $head->status = $request->input('head.status') ? 1 : 0;
         $head->save();
+        $po_status = $request->input('head.status') ? 4 : 3;
+        $sheet_status = $request->input('head.status') ? 2 : 1;
+
         if( $request->input('data') ){
             foreach( $request->input('data') as $field ){
                 $detail = new MaterialsDetail;
@@ -86,11 +89,14 @@ class MaterialsController extends Controller
                 $detail->head_id = $head->id;
                 $detail->sheet_head_id = $field['head_id'];
                 $detail->sheet_id = $field['sheet_id'];
-                $detail->delivery = $field['delivery'];
+                $detail->delivery = date('Y-m-d', strtotime( $field['delivery'] ) );
                 $detail->quantity = $field['quantity'];
                 if( !empty($field['sheet_id']) && !empty($field['delivery']) ){
                     $detail->save();
-                    OrderSheet::where('id',$field['sheet_id'])->update(['status' => 1]);
+                    $sheet = OrderSheet::where('id',$field['sheet_id'])->first();
+                    $sheet->status = $sheet_status;
+                    $sheet->save();
+                    OrderHeader::where('id',$sheet->order_id)->update([ 'po_status' => $po_status ]);
                 }
             }
         }
@@ -150,24 +156,31 @@ class MaterialsController extends Controller
         $user = JWTAuth::toUser($request->input('token'));
         $head =  MaterialsHead::where('id',$id)->first();
         if( !$head ) return false;
+
         $head->user_id = $user->id;
         $head->status = $request->input('head.status') ? 1 : 0;
         $head->save();
+        $po_status = $request->input('head.status') ? 4 : 3;
+        $sheet_status = $request->input('head.status') ? 2 : 1;
         if( $request->input('data') ){
             foreach( $request->input('data') as $field ){
                 $chk = MaterialsDetail::where('sheet_id',$field['sheet_id'])
                                         ->where('head_id',$head->id)
                                         ->first();
+
                 $detail = $chk ? $chk : new MaterialsDetail;
                 $detail->user_id = $user->id;
                 $detail->head_id = $head->id;
                 $detail->sheet_head_id = $field['head_id'];
                 $detail->sheet_id = $field['sheet_id'];
-                $detail->delivery = $field['delivery'];
+                $detail->delivery = date('Y-m-d',strtotime( $field['delivery'] ) );
                 $detail->quantity = $field['quantity'];
                 if( !empty($field['sheet_id']) && !empty($field['delivery']) ){
                     $detail->save();
-                    OrderSheet::where('id',$field['sheet_id'])->update(['status' => 1]);
+                    $sheet = OrderSheet::where('id',$field['sheet_id'])->first();
+                    $sheet->status = $sheet_status;
+                    $sheet->save();
+                    OrderHeader::where('id',$sheet->order_id)->update(['po_status' => $po_status ]);
                 }
             }
         }
@@ -185,12 +198,15 @@ class MaterialsController extends Controller
      */
     public function destroy(Request $request,$id)
     {   if( $request->input('type') == 'head'){
+            $ids = explode('-',$id);
+            foreach( $ids as $no => $id ){
             $head = MaterialsHead::where('id',$id)->first();
             if( $head ){
                 $rows = MaterialsDetail::where('head_id',$id)->get();
                 if( $rows ){
                     foreach( $rows as $row )
                     OrderSheet::where('id',$row->sheet_id)->update(['status'=>0]);
+                    OrderHeader::where('id',$row->sheet_head_id)->update(['po_status'=>2]);
                     $row->delete();
                 }
                 $head->delete();
@@ -202,6 +218,7 @@ class MaterialsController extends Controller
                 $data = [
                     'code' => 401
                 ];
+            }
             }
 
 
@@ -224,7 +241,8 @@ class MaterialsController extends Controller
     }
 
     public function searchSpec(Request $request,$type='spec'){
-        $term = $request->input('term');
+        $term   = $request->input('term');
+        $status = $request->exists('status') ? $request->input('status') : 2;
         $rows = DB::table('order_headers as head')
                     ->join('order_sheet as sheet','head.id','=','sheet.order_id')
                     ->select('head.id as head_id',
@@ -235,8 +253,8 @@ class MaterialsController extends Controller
                             'sheet.created_at as created_sheet',
                             'sheet.updated_at as updated_sheet',
                             'sheet.*')
-                    ->where('head.po_status',2)
-                    ->where('sheet.status',0);
+                    ->where('head.po_status', $status )
+                    ->where('sheet.status',( $status == 2 ? 0 : 1 ));
         if( $type == 'spec'){
                 $rows = $rows->where('sheet.spec_no','like','%' . $term .'%');
         }else{ 
@@ -345,16 +363,16 @@ class MaterialsController extends Controller
 
     public function searchPo(Request $request){
         $term = $request->input('term');
+        $status = $request->exists('status') ? $request->input('status') : 2;
         $rows = OrderHeader::where('po_no','like','%'. $term .'%')
+                            ->where('po_no','!=','')
+                            ->where('po_status', $status)
                             ->orderBy('po_no')->skip(0)->take(20)->get();
         $jdata = [];
+        //echo 'resule '. count($rows ) .' search '. $term ;
         if($rows){
             foreach( $rows as $row ){
-                $sheet = OrderSheet::where('order_id',$row->id)->first();
-                $jdata[] = [
-                    'header' => OrderHeader::fieldRows( $row ),
-                    'detail' => $sheet ? OrderSheet::fieldRows( $sheet ) : []
-                ];
+                $jdata[] = OrderHeader::fieldRows( $row );
             }
         }
         $data = [

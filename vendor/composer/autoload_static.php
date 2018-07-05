@@ -377,6 +377,8 @@ class ComposerStaticInit18458727870515e639bdd9b7b85a2404
         'Cpdf' => __DIR__ . '/..' . '/dompdf/dompdf/lib/Cpdf.php',
         'CreateMaterialsDetailsTable' => __DIR__ . '/../..' . '/database/migrations/2018_06_01_095831_create_materials_details_table.php',
         'CreateMaterialsHeadsTable' => __DIR__ . '/../..' . '/database/migrations/2018_06_01_095804_create_materials_heads_table.php',
+        'CreatePoDetailsTable' => __DIR__ . '/../..' . '/database/migrations/2018_07_02_181000_create_po_details_table.php',
+        'CreatePoHeadersTable' => __DIR__ . '/../..' . '/database/migrations/2018_07_02_180937_create_po_headers_table.php',
         'CustomerPo' => __DIR__ . '/../..' . '/database/migrations/2018_01_19_033829_customer_po.php',
         'DatabaseSeeder' => __DIR__ . '/../..' . '/database/seeds/DatabaseSeeder.php',
         'Dealer' => __DIR__ . '/../..' . '/database/migrations/2018_01_19_033900_dealer.php',

@@ -40,9 +40,12 @@ Route::group(['middleware'=>'cors'],function(){
 
         //:: MATERIALS ORDER AND MATERIALS OP :://
         Route::get('materials-search/{type?}','Api\MaterialsController@searchSpec');
-        //Route::get('materials-search/po','Api\MaterialsController@searchPo');
+        Route::get('materials-search-po','Api\MaterialsController@searchPo');
         Route::resource('materials','Api\MaterialsController');
+        Route::resource('materials-po','Api\PoController');
         //:: Search auto complete :://
         Route::get('search/model','Api\SpecController@search');
+
+        //:: MATERIALS PO :://
     });
 });
