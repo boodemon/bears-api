@@ -19,7 +19,7 @@ class SpecController extends Controller
     {
         if((Req::exists('field') || Req::exists('keywords')) && Req::input('keywords') != ''){
             $rows = Spec::where(Req::input('field'),'like','%'. Req::input('keywords') .'%')
-            ->orderBy('create_date','desc')->paginate(100);
+            ->orderBy('create_date','desc')->paginate(250);
         }else {
             $rows = Spec::orderBy('create_date','desc')->paginate(100);
         }
@@ -30,6 +30,7 @@ class SpecController extends Controller
                 $json[] = $this->json($row);
             }
         }
+
         $data = [
             'code' => 200,
             'data' => $json,

@@ -27,10 +27,17 @@ class MaterialsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $rows = MaterialsHead::orderBy('status')
-                                ->orderBy('created_at','desc')
+        $rows = MaterialsHead::orderBy('status');
+        if( $request->input('onStart') ){
+            $between    = [
+                            $this->ymd( $request->input('onStart') ), 
+                            $this->ymd( $request->input('onEnd') )
+                         ];
+            $rows       = $rows->whereBetween('created_at',$between)->orderBy('created_at');
+        }
+            $rows       = $rows->orderBy('created_at','desc')
                                 ->paginate(54);
         $jdata = [];
         $user =  User::json() ;
@@ -49,12 +56,18 @@ class MaterialsController extends Controller
         }
         $data = [
             'code' => 200,
-            'data' => $jdata
+            'data' => $jdata,
+            'cpage' => $rows->currentPage(),
+            'lpage' => $rows->lastPage()
+
         ];
         return response()->json($data);
 
     }
-
+    public function ymd($date = ''){
+        if( $date == '' ) return false;
+        return date('Y-m-d',strtotime($date) );
+    }
     /**
      * Show the form for creating a new resource.
      *

@@ -25,8 +25,24 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $rows = OrderHeader::orderBy('po_status','asc')
-                            ->orderBy('po_date','desc')
+        $rows = OrderHeader::orderBy('po_status','asc');
+        if( !empty( $request->input('keywords') ) ){
+            $rows = $rows->where(function($query) use ($request){
+                $keys = explode(' ', $request->input('keywords') );
+                $field = $request->input('field');
+                foreach( $keys as $idx => $key ){
+                    $query->where( $field ,'like','%' . $key .'%') ;
+                }
+            });
+        }
+        if( $request->input('onStart') ){
+            $between    = [
+                            $this->ymd( $request->input('onStart') ), 
+                            $this->ymd( $request->input('onEnd') )
+                         ];
+            $rows       = $rows->whereBetween('created_at',$between)->orderBy('created_at');
+        }
+        $rows = $rows->orderBy('po_date','desc')
                             ->orderBy('updated_at','desc')
                             ->paginate(500);
         $odata = [];
@@ -38,16 +54,27 @@ class OrderController extends Controller
             $data = [
                 'code' => 200,
                 'data' => $odata['rows'],
-                'sheets' => $odata['order_sheet']
+                'sheets' => $odata['order_sheet'],
+                'cpage' => $rows->currentPage(),
+                'lpage' => $rows->lastPage()
+    
             ];
         }else{ 
             $data = [
                 'code' => 202,
                 'data' => [],
-                'sheets' => []
+                'sheets' => [],
+                'cpage' => 0,
+                'lpage' => 0
+    
             ];
         }
         return response()->json( $data );
+    }
+
+    public function ymd($date = ''){
+        if( $date == '' ) return false;
+        return date('Y-m-d',strtotime($date) );
     }
 
     /**
@@ -183,13 +210,17 @@ class OrderController extends Controller
             $data = [
                 'data' => OrderHeader::fieldRows( $heads ),
                 'sheets'=> $sheetData,
-                'code' => 200
+                'code' => 200,
+                'cpage' => $rows->currentPage(),
+                'lpage' => $rows->lastPage()
             ];
         }else{ 
             $data = [
                 'data' => [],
                 'sheets' => [],
-                'code' => 202
+                'code' => 202,
+                'cpage' => 0,
+                'lpage' => 0
             ];
         }
         return response()->json( $data );

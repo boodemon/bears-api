@@ -29,11 +29,28 @@ class PoController extends Controller
         $token = Req::input('token');
         $this->user  = JWTAuth::toUser( Req::input('token') );
     }
-    public function index()
+    public function index(Request $request)
     {
         $jdata = [];
-        $rows = PoHeader::orderBy('status')
-                        ->orderBy('onDate','DESC')
+        $rows = PoHeader::orderBy('status');
+        if( !empty( $request->input('keywords') ) ){
+            $rows = $rows->where(function($query) use ($request){
+                $keys = explode(' ', $request->input('keywords') );
+                $field = $request->input('field');
+                foreach( $keys as $idx => $key ){
+                    $query->where( $field ,'like','%' . $key .'%') ;
+                }
+            });
+        }
+        if( $request->input('onStart') ){
+            $between    = [
+                            $this->ymd( $request->input('onStart') ), 
+                            $this->ymd( $request->input('onEnd') )
+                         ];
+            $rows       = $rows->whereBetween('onDate',$between)->orderBy('created_at');
+        }
+                
+        $rows = $rows->orderBy('onDate','DESC')
                         ->orderBy('no')
                         ->orderBy('to')
                         ->paginate(500);
@@ -44,11 +61,16 @@ class PoController extends Controller
         }
         $data = [
             'code' => 200,
-            'data' => $jdata
+            'data' => $jdata,
+            'cpage' => $rows->currentPage(),
+            'lpage' => $rows->lastPage()
         ];
         return response()->json($data);
     }
-
+    public function ymd($date = ''){
+        if( $date == '' ) return false;
+        return date('Y-m-d',strtotime($date) );
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -154,7 +176,7 @@ class PoController extends Controller
      */
     public function edit($id)
     {
-        //
+       return $this->onExport($id);
     }
 
     /**
@@ -278,5 +300,26 @@ class PoController extends Controller
         }
 
         return response()->json($data);
+    }
+    public function onExport($id = 0){
+        $head = PoHeader::where('id',$id)->first();
+        if( $head ){
+            $rows = @json_decode( json_encode( PoHeader::fieldRows( $head ) ) );
+            $xls 	= new PHPExcel();
+            $excel 	= 'public/documents/materials-po-'. $id . date('YmdHis') .'.xlsx';
+            include storage_path() . '/export-class/xls-header-legal-landscape.php';
+			$subject 	= 	'Materials PO';
+            include storage_path() . '/export-class/xls-materials-po.php';
+            $data = [
+                'code' => 200,
+                'file' => asset( $excel )
+            ];
+        }else{ 
+            $data = [
+                'code' => 202,
+                'file' => ''
+            ];
+        }
+        return response()->json( $data );
     }
 }
